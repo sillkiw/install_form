@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Загрузка файлов</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f5efe4;
+        --card: #fffaf2;
+        --line: #d9c9ac;
+        --text: #2f2419;
+        --accent: #b9652a;
+        --accent-dark: #8e4d20;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        background:
+          radial-gradient(circle at top left, #fff8ea 0, transparent 30%),
+          linear-gradient(135deg, #f7f0e2 0%, #efe0c5 100%);
+        color: var(--text);
+      }
+
+      .page {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 48px 20px;
+      }
+
+      .card {
+        background: color-mix(in srgb, var(--card) 92%, white);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        padding: 28px;
+        box-shadow: 0 20px 50px rgba(78, 50, 23, 0.08);
+      }
+
+      h1 {
+        margin-top: 0;
+        font-size: clamp(2rem, 4vw, 3.2rem);
+        line-height: 1;
+      }
+
+      p {
+        margin: 0 0 20px;
+        font-size: 1.05rem;
+      }
+
+      form {
+        display: grid;
+        gap: 16px;
+      }
+
+      .dropzone {
+        display: grid;
+        gap: 12px;
+        justify-items: center;
+        padding: 30px 20px;
+        border: 2px dashed var(--line);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.65);
+        text-align: center;
+      }
+
+      .dropzone.dragover {
+        border-color: var(--accent);
+        background: #fff1e7;
+      }
+
+      input[type="file"] {
+        max-width: 100%;
+      }
+
+      button,
+      .download-link {
+        border: 0;
+        border-radius: 999px;
+        background: var(--accent);
+        color: white;
+        padding: 12px 18px;
+        font-size: 1rem;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background 0.2s ease, transform 0.2s ease;
+      }
+
+      button:hover,
+      .download-link:hover {
+        background: var(--accent-dark);
+        transform: translateY(-1px);
+      }
+
+      .files {
+        margin-top: 28px;
+      }
+
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 16px 0 0;
+        display: grid;
+        gap: 12px;
+      }
+
+      li {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 16px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.6);
+      }
+
+      .filename {
+        overflow-wrap: anywhere;
+      }
+
+      .empty {
+        padding: 18px;
+        border: 1px dashed var(--line);
+        border-radius: 16px;
+      }
+
+      @media (max-width: 640px) {
+        li {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .download-link,
+        button {
+          width: 100%;
+          text-align: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="card">
+        <h1>Форма загрузки файлов</h1>
+        <p>Перетащите файл в область ниже или выберите его вручную. После загрузки файл появится в списке и его можно будет скачать.</p>
+
+        <form action="/upload" method="post" enctype="multipart/form-data">
+          <label class="dropzone" id="dropzone">
+            <strong>Скиньте файл сюда</strong>
+            <span>или нажмите, чтобы выбрать файл</span>
+            <input id="file-input" type="file" name="file" required />
+          </label>
+          <button type="submit">Загрузить файл</button>
+        </form>
+
+        <section class="files">
+          <h2>Загруженные файлы</h2>
+          {% if files %}
+            <ul>
+              {% for file in files %}
+                <li>
+                  <span class="filename">{{ file }}</span>
+                  <a class="download-link" href="/download/{{ file }}">Скачать</a>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <div class="empty">Пока файлов нет.</div>
+          {% endif %}
+        </section>
+      </section>
+    </main>
+
+    <script>
+      const dropzone = document.getElementById("dropzone");
+      const input = document.getElementById("file-input");
+
+      ["dragenter", "dragover"].forEach((eventName) => {
+        dropzone.addEventListener(eventName, (event) => {
+          event.preventDefault();
+          dropzone.classList.add("dragover");
+        });
+      });
+
+      ["dragleave", "drop"].forEach((eventName) => {
+        dropzone.addEventListener(eventName, (event) => {
+          event.preventDefault();
+          dropzone.classList.remove("dragover");
+        });
+      });
+
+      dropzone.addEventListener("drop", (event) => {
+        const files = event.dataTransfer.files;
+        if (files.length > 0) {
+          input.files = files;
+        }
+      });
+    </script>
+  </body>
+</html>
