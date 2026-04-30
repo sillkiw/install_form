@@ -67,6 +67,7 @@
         border-radius: 18px;
         background: rgba(255, 255, 255, 0.65);
         text-align: center;
+        cursor: pointer;
       }
 
       .dropzone.dragover {
@@ -75,7 +76,7 @@
       }
 
       input[type="file"] {
-        max-width: 100%;
+        display: none;
       }
 
       button,
@@ -101,7 +102,30 @@
         margin-top: 28px;
       }
 
-      ul {
+      .selected-files {
+        display: none;
+        gap: 8px;
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.6);
+      }
+
+      .selected-files.visible {
+        display: grid;
+      }
+
+      .selected-title {
+        margin: 0;
+        font-size: 0.95rem;
+      }
+
+      .selected-list {
+        margin: 0;
+        padding-left: 18px;
+      }
+
+      .file-list {
         list-style: none;
         padding: 0;
         margin: 16px 0 0;
@@ -109,7 +133,7 @@
         gap: 12px;
       }
 
-      li {
+      .file-item {
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -131,7 +155,7 @@
       }
 
       @media (max-width: 640px) {
-        li {
+        .file-item {
           align-items: flex-start;
           flex-direction: column;
         }
@@ -148,23 +172,27 @@
     <main class="page">
       <section class="card">
         <h1>Форма загрузки файлов</h1>
-        <p>Перетащите файл в область ниже или выберите его вручную. После загрузки файл появится в списке и его можно будет скачать.</p>
+        <p>Перетащите файл в область ниже или выберите его вручную. После загрузки файлы появятся в списке и их можно будет скачать.</p>
 
         <form action="/upload" method="post" enctype="multipart/form-data">
           <label class="dropzone" id="dropzone">
-            <strong>Скиньте файл сюда</strong>
-            <span>или нажмите, чтобы выбрать файл</span>
-            <input id="file-input" type="file" name="file" required />
+            <strong>Добавьте файлы</strong>
+            <span>Скиньте их сюда или нажмите, чтобы выбрать</span>
+            <input id="file-input" type="file" name="files" multiple required />
           </label>
-          <button type="submit">Загрузить файл</button>
+          <div class="selected-files" id="selected-files">
+            <p class="selected-title">Выбраны файлы:</p>
+            <ol class="selected-list" id="selected-list"></ol>
+          </div>
+          <button type="submit">Загрузить файлы</button>
         </form>
 
         <section class="files">
           <h2>Загруженные файлы</h2>
           {% if files %}
-            <ul>
+            <ul class="file-list">
               {% for file in files %}
-                <li>
+                <li class="file-item">
                   <span class="filename">{{ file }}</span>
                   <a class="download-link" href="/download/{{ file }}">Скачать</a>
                 </li>
@@ -180,6 +208,25 @@
     <script>
       const dropzone = document.getElementById("dropzone");
       const input = document.getElementById("file-input");
+      const selectedFiles = document.getElementById("selected-files");
+      const selectedList = document.getElementById("selected-list");
+
+      const renderSelectedFiles = () => {
+        selectedList.innerHTML = "";
+
+        if (input.files.length === 0) {
+          selectedFiles.classList.remove("visible");
+          return;
+        }
+
+        Array.from(input.files).forEach((file) => {
+          const item = document.createElement("li");
+          item.textContent = file.name;
+          selectedList.appendChild(item);
+        });
+
+        selectedFiles.classList.add("visible");
+      };
 
       ["dragenter", "dragover"].forEach((eventName) => {
         dropzone.addEventListener(eventName, (event) => {
@@ -199,8 +246,11 @@
         const files = event.dataTransfer.files;
         if (files.length > 0) {
           input.files = files;
+          renderSelectedFiles();
         }
       });
+
+      input.addEventListener("change", renderSelectedFiles);
     </script>
   </body>
 </html>

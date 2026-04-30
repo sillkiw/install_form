@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Annotated
 
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
@@ -31,15 +32,26 @@ async def index(request: Request) -> HTMLResponse:
 
 
 @app.post("/upload")
-async def upload_file(file: UploadFile = File(...)) -> RedirectResponse:
-    filename = Path(file.filename or "").name
-    if not filename:
-        raise HTTPException(status_code=400, detail="File name is empty")
+async def upload_file(
+    files: Annotated[list[UploadFile], File(...)],
+) -> RedirectResponse:
+    saved_files = 0
 
-    destination = UPLOADS_DIR / filename
-    content = await file.read()
-    destination.write_bytes(content)
-    await file.close()
+    for file in files:
+        filename = Path(file.filename or "").name
+        if not filename:
+            await file.close()
+            continue
+
+        destination = UPLOADS_DIR / filename
+        content = await file.read()
+        destination.write_bytes(content)
+        await file.close()
+        saved_files += 1
+
+    if saved_files == 0:
+        raise HTTPException(status_code=400, detail="No files provided")
+
     return RedirectResponse(url="/", status_code=303)
 
 
